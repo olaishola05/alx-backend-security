@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'ratelimit.middleware.RatelimitMiddleware',
     'ip_tracking.middleware.RequestLoggingMiddleware',
     'django_ip_geolocation.middleware.IpGeolocationMiddleware',
     'django.middleware.common.CommonMiddleware',
