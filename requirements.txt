@@ -1,5 +1,13 @@
 asgiref==3.9.1
+certifi==2025.8.3
+charset-normalizer==3.4.3
 Django==5.2.5
+django-ip-geolocation==1.6.1
 django-ipware==7.0.1
+django-redis==6.0.0
+idna==3.10
 python-ipware==3.0.0
+redis==6.4.0
+requests==2.32.5
 sqlparse==0.5.3
+urllib3==2.5.0

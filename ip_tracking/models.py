@@ -6,6 +6,8 @@ class RequestLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     path = models.TextField(max_length=255, db_index=True)
     is_routable = models.BooleanField(default=False)
+    country = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)
 
     class Meta:
         ordering = ['-timestamp']

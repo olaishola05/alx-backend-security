@@ -2,8 +2,8 @@ import logging
 from datetime import datetime, timezone
 from django.http import HttpResponseForbidden
 from ipware import get_client_ip
-
 from ip_tracking.models import BlockedIP, RequestLog
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,7 +28,8 @@ class RequestLoggingMiddleware:
     except Exception as e:
         logger.error(f"Error checking blocked IP: {e}")
         return HttpResponseForbidden("Error checking blocked IP")
-        
+      
+    location = request.geolocation    
     timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
     path = request.path
 
@@ -41,7 +42,9 @@ class RequestLoggingMiddleware:
             ip_address=ip_address,
             path=path,
             is_routable=is_routable,
-            timestamp=timestamp
+            timestamp=timestamp,
+            city=location.get('city', '') if location else '',
+            country=location.get('country', '') if location else '',
         )
     except Exception as e:
         logger.error(f"Failed to save request log to DB: {e}")
