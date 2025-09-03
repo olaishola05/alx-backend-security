@@ -30,3 +30,16 @@ class BlockedIP(models.Model):
 
     def __str__(self):
         return f"{self.ip_address} blocked at {self.blocked_at.strftime('%Y-%m-%d %H:%M:%S')}"
+
+class SuspiciousIP(models.Model):
+    ip_address = models.GenericIPAddressField(unique=True)
+    detected_at = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField()
+
+    class Meta:
+        ordering = ['-detected_at']
+        verbose_name = "Suspicious IP"
+        verbose_name_plural = "Suspicious IPs"
+
+    def __str__(self):
+        return f"{self.ip_address} detected at {self.detected_at.strftime('%Y-%m-%d %H:%M:%S')} - Reason: {self.reason}"

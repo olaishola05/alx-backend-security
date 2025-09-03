@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -113,6 +115,22 @@ CACHES = {
 }
 
 IPGEOLOCATION_CACHE_TIMEOUT = 60 * 60 * 24
+
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+
+CELERY_BEAT_SCHEDULE = {
+        'flag-suspicious-ips-hourly': {
+            'task': 'ip_tracking.tasks.flag_suspicious_ips',
+            'schedule': crontab(minute=0),
+        },
+    }
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
