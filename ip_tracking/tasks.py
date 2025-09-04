@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from celery import shared_task
 from django.db.models import Count
 from ip_tracking.models import RequestLog, SuspiciousIP
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +47,34 @@ def flag_suspicious_ips():
     reason = f"Accessed sensitive path: {entry['path']}."
     SuspiciousIP.objects.get_or_create(ip_address=ip, defaults={'reason': reason})
     logger.warning(f"Flagged suspicious IP '{ip}' for accessing sensitive paths.")
+    
+  all_requests = RequestLog.objects.filter(timestamp__gte=one_hour_ago)
+  df = pd.DataFrame(list(all_requests.values()))
+  
+  if not df.empty:
+    df['path_encoded'] = df['path'].astype('category').cat.codes # mapping the path to numerical values
+    
+    # Aggregating data to a per-IP basis
+    ip_features = df.groupby('ip_address').agg(
+      request_count=('timestamp', 'count'),
+      path_uniqueness=('path_encoded', 'nunique')
+    ).reset_index()
+    
+    X = ip_features[['request_count', 'path_uniqueness']]
+    model = IsolationForest(contamination=0.5, random_state=42)
+    model.fit(X)
+    
+    # Predicting anomalies (-1 for anomalies, 1 for normal)
+    predictions = model.predict(X)
+    
+    # Find the IPs that the model has flagged as anomalies
+    anomalous_ips_df = ip_features[predictions == -1]
+    
+    for index, row in anomalous_ips_df.iterrows():
+      ip = row['ip_address']
+      reason = "Detected as an anomaly by the Isolation Forest model."
+      SuspiciousIP.objects.get_or_create(ip_address=ip, defaults={'reason': reason})
+      logger.warning(f"Flagged suspicious IP '{ip}' via ML model: {reason}")
     
     
 logger.info("Completed suspicious IP detection task.")
